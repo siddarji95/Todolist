@@ -22,6 +22,7 @@ ul li {
   list-style-type: none;
   background: #eee;
   font-size: 18px;
+  height: 45px;
   transition: 0.2s;
   
   /* make the list items unselectable */
@@ -41,11 +42,13 @@ ul li:hover {
   background: #ddd;
 }
 
-/* When clicked on, add a background color and strike out text */
+/* When clicked on, add a background color*/
 ul li.checked {
   background: #888;
   color: #fff;
-  text-decoration: line-through;
+}
+.checked{
+  text-decoration: line-through
 }
 
 /* Add a "checked" mark when clicked on */
@@ -60,6 +63,15 @@ ul li.checked::before {
   transform: rotate(45deg);
   height: 15px;
   width: 7px;
+}
+
+.listTitle{
+  float: left;
+}
+.dateTime{
+  float: right;
+  padding: 0 45px;
+  font-weight: 100;
 }
 
 /* Style the close button */
@@ -123,4 +135,8 @@ input {
 
 .addBtn:hover {
   background-color: #bbb;
+}
+
+.donetasks{
+  font-weight: bold
 }

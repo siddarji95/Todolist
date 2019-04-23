@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import List from './List';
 import fire from './fire';
 import './App.css';
+//import Menu from './Menu';
 
 class App extends Component {
   constructor(props) {
@@ -111,6 +112,12 @@ class App extends Component {
     this.currentInput = {};
    this.currentInput.name=this.state.input;
    this.currentInput.status='';
+    var today = new Date();
+    var date = today.getDate()+'-'+(today.getMonth()+1)+'-'+today.getFullYear();
+    var time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
+    var dateTime = date+' '+time;
+    this.currentInput.dateTime=dateTime;
+
     this.setState({
      // list:[...this.state.list,this.currentInput],
       input:''
@@ -139,15 +146,17 @@ class App extends Component {
   render() {
     return (
       <div className="App">
+       <div className='list'>
         <div id="myDIV" className="header">
         <form onSubmit={this.handleSubmit}>
-         <h2 >My To Do List</h2>
-         <input type="text" id="myInput" placeholder="Title..." onChange={this.handleChange} value={this.state.input}/>
+         <h2 >To Do List</h2>
+         <input type="text" id="myInput" placeholder="Add task..." onChange={this.handleChange} value={this.state.input}/>
          <input className="addBtn" type="submit" value="Add" />
          </form>
        </div>
        <List list={this.state.list} deleteList={this.deleteList} statusToggle={this.statusToggle}/>
    <div className='donetasks'>Total done task:{this.state.doneTasks}/{this.state.list.length}</div>
+     </div>
      </div>
     );
   }

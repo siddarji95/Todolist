@@ -8,7 +8,8 @@ class List extends React.Component{
                     return (
 
                         <li key={index} className={value.text.status} onClick={()=>this.props.statusToggle(index)}>
-                        {value.text.name}
+                        <div className={`listTitle ${value.text.status}`}>{value.text.name}</div>
+                        <span className='dateTime'>{value.text.dateTime}</span>
                         <span className='close' onClick={(e)=>this.props.deleteList(e,index)}>
                         X
                           </span>
