@@ -64,6 +64,14 @@ ul li.checked::before {
   height: 15px;
   width: 7px;
 }
+#root{
+  height: 800px
+}
+.App{
+  height: 100%;
+  width: 100%;
+  display: table;
+}
 
 .listTitle{
   float: left;
@@ -95,10 +103,9 @@ ul li.checked::before {
 
 /* Style the header */
 .header {
-  background-color: #f44336;
+  background-color: #3b5998;
   padding: 30px 40px;
   color: white;
-  text-align: center;
 }
 
 /* Clear floats after the header */
@@ -139,4 +146,20 @@ input {
 
 .donetasks{
   font-weight: bold
+}
+.loader{
+  text-align: center;
+  height: 100%;
+  width: 100%;
+  display: table-cell;
+  vertical-align: middle;
+}
+.dataLoader{
+  text-align: center;
+}
+.logout{
+  position:absolute;
+  top:0px;
+  right: 0px;
+  width: 100px !important
 }

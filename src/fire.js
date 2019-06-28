@@ -1,4 +1,4 @@
-import firebase from 'firebase'
+import * as firebase from 'firebase'
 var config = {
     apiKey: "AIzaSyAESAZL26PsKLuD_FQz0oUigvvfByX8PUg",
     authDomain: "todolist-95.firebaseapp.com",

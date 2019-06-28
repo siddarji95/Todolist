@@ -1,165 +1,100 @@
 import React, { Component } from 'react';
-import List from './List';
+//import './App.css';
+import Home from './Home';
+import Login from './Login'
+import Signup from './Signup'
 import fire from './fire';
-import './App.css';
+import * as firebase from 'firebase/app';
+import Loader from 'react-loader-spinner'
+import 'firebase/auth';
+import withFirebaseAuth from 'react-with-firebase-auth';
 //import Menu from './Menu';
+
 
 class App extends Component {
   constructor(props) {
-    console.log(fire)
     super(props)
     this.state = {
-      input: '',
-      list:[],
-      doneTasks:0
+      showLoader: true,
+      showSignup: false
     }
-    this.handleChange = this.handleChange.bind(this)
-    this.handleSubmit = this.handleSubmit.bind(this)
-    //this.handleClick = this.handleClick.bind(this)
-    this.deleteList = this.deleteList.bind(this)
-    this.statusToggle = this.statusToggle.bind(this)
-  }
-  componentWillMount(){
-    /* Create reference to messages in Firebase Database */
-   
-    let listRef = fire.database().ref('list').orderByKey().limitToLast(100);
-    listRef.on('child_added', snapshot => {
-      /* Update React state when message is added at Firebase Database */
-      let listvalue = { text: snapshot.val(), id: snapshot.key };
-      let list=[listvalue].concat(this.state.list)
-      const doneTasks=list.filter((item,i)=>{
-        return item.text.status==='checked'
-     }).length;
-      this.setState({
-         list: list,
-         doneTasks: doneTasks
-      });
+    this.handleShowSignup = this.handleShowSignup.bind(this)
+    setTimeout(() => {
+      this.setState({ showLoader: false })
+    }, 3000);
+    firebase.auth().onAuthStateChanged(user => {
+      if (user.hasOwnProperty('user'))
+        console.log('onAuthStateChanged', user)
+      if (user) {
+        this.setState({ showLoader: false })
+      }
+      else if (user.hasOwnProperty('user')) {
+        this.props.user = user.user
+      }
     })
-    listRef.on('child_changed', snapshot => {
-      let index=-1;
-      this.state.list.forEach((item,i)=>{
-
-        if(item.id==snapshot.key){
-          index=i
-        }
-      })
-      let listValue = { text: snapshot.val(), id: snapshot.key };
-      let list = this.state.list
-      list[index]=listValue
-      const doneTasks=list.filter((item,i)=>{
-        return item.text.status==='checked'
-     }).length;
-      this.setState({
-         list: list,
-         doneTasks: doneTasks
-      });
-      
-    })
-    listRef.on('child_removed', snapshot => {
-      let index=-1;
-      this.state.list.forEach((item,i)=>{
-
-        if(item.id==snapshot.key){
-          index=i
-        }
-      })
-      const list=this.state.list.filter((item,i)=>{
-        return i!==index
-     })
-     const doneTasks=list.filter((item,i)=>{
-      return item.text.status==='checked'
-   }).length;
-    this.setState({
-       list:list,
-       doneTasks: doneTasks
-    });
-    })
-  
   }
-  handleChange(e) {
-    e.preventDefault();
-      this.setState({
-          list:this.state.list,
-          input: e.target.value
-      })
-     // console.log(this.state)
-  }
-  statusToggle(index) {  
-    
-    console.log(this.state)
-    const list = this.state.list
-    if(list[index].text.status==='')
-    list[index].text.status='checked';
-    else
-    list[index].text.status='';
-    const doneTasks= list.filter((item,i)=>{
-      return item.text.status==='checked'
-   }).length; 
-    this.setState({
-     // list:list,
-     // doneTasks:doneTasks
-   });
-   let uid=list[index].id;
-   fire.database().ref('list/'+uid).update({ status: list[index].text.status });
-    // console.log(this.state)
- 
-  }
-  handleSubmit(e){
-    e.preventDefault()
-    //rooms.push({roomId:this.state.roomId+1,name:name,messages:messages});
-    if(this.state.input!==''){
-    console.log('here')
-    this.currentInput = {};
-   this.currentInput.name=this.state.input;
-   this.currentInput.status='';
-    var today = new Date();
-    var date = today.getDate()+'-'+(today.getMonth()+1)+'-'+today.getFullYear();
-    var time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
-    var dateTime = date+' '+time;
-    this.currentInput.dateTime=dateTime;
-
-    this.setState({
-     // list:[...this.state.list,this.currentInput],
-      input:''
-    })
-    fire.database().ref('list').push(this.currentInput);
-    }
-  }
-  deleteList(e,index){
-    e.stopPropagation();
-    console.log('deleteList')
-    let uid=this.state.list[index].id;
-     const list=this.state.list.filter((item,i)=>{
-        return i!==index
-     })
-     const doneTasks=list.filter((item,i)=>{
-      return item.status==='checked'
-   }).length;
-     console.log(list)
-     this.setState({
-        // list:list,
-       // doneTasks:doneTasks
-     });
-     
-     fire.database().ref('list/'+uid).remove();
+  handleShowSignup(val) {
+    console.log(val, 'handleShowSignup')
+    this.setState({ showSignup: val })
   }
   render() {
+    console.log('render')
+    console.log(this.props)
+
+    const {
+      user,
+      signOut,
+      signInWithFacebook,
+      signInWithTwitter,
+      signInWithGoogle,
+    } = this.props;
+
     return (
       <div className="App">
-       <div className='list'>
-        <div id="myDIV" className="header">
-        <form onSubmit={this.handleSubmit}>
-         <h2 >To Do List</h2>
-         <input type="text" id="myInput" placeholder="Add task..." onChange={this.handleChange} value={this.state.input}/>
-         <input className="addBtn" type="submit" value="Add" />
-         </form>
-       </div>
-       <List list={this.state.list} deleteList={this.deleteList} statusToggle={this.statusToggle}/>
-   <div className='donetasks'>Total done task:{this.state.doneTasks}/{this.state.list.length}</div>
-     </div>
-     </div>
+        {
+          this.state.showLoader
+            ?
+            <div className='loader'>
+              <Loader
+                type="Plane"
+                color="#ffa500"
+                height="100"
+                width="100"
+              />
+            </div>
+            :
+            <React.Fragment> {
+              user
+                ?
+                <button type="button" className="btn btn-default btn-sm logout" onClick={signOut} >
+                  Log out
+                   </button>
+                : <div id="myDIV" className="header"> <h2 style={{ margin: 0 }}>To Do List</h2> </div>
+            } {
+                user
+                  ? <Home user={user} />
+                  : !this.state.showSignup
+                    ?
+                    <Login
+                      signInWithFacebook={signInWithFacebook}
+                      signInWithTwitter={signInWithTwitter}
+                      signInWithGoogle={signInWithGoogle}
+                      handleShowSignup={this.handleShowSignup}
+                    /> : <Signup handleShowSignup={this.handleShowSignup} />
+              }
+            </React.Fragment>
+        }
+      </div>
     );
   }
 }
-
-export default App;
+const firebaseAppAuth = fire.auth();
+const providers = {
+  facebookProvider: new firebase.auth.FacebookAuthProvider(),
+  twitterProvider: new firebase.auth.TwitterAuthProvider(),
+  googleProvider: new firebase.auth.GoogleAuthProvider(),
+};
+export default withFirebaseAuth({
+  providers,
+  firebaseAppAuth,
+})(App);
