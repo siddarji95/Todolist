@@ -21,12 +21,10 @@ class Login extends Component {
     this.setState({
         [e.target.name]:e.target.value
     })
-     console.log(this.state)
  }
   handleSubmit = (event) => {
     event.preventDefault();
     const { email, password } = this.state;
-    console.log(email, password)
     fire.auth().signInWithEmailAndPassword(email, password).then((user) => {
       console.log('Login successfully', user)
     })
@@ -70,7 +68,7 @@ class Login extends Component {
                   <p>Or sign in manually:</p>
                 </div>
                 <form>
-                <input type="text" name="email" placeholder="Email" required onChange={this.handleChange}/>
+                <input type="email" name="email" placeholder="Email" required onChange={this.handleChange}/>
                 <input type="password" name="password" placeholder="Password" required onChange={this.handleChange} />
                 <input type="submit" value="Login" onClick={this.handleSubmit}/>
                 </form>
@@ -81,10 +79,10 @@ class Login extends Component {
         <div className="bottom-container">
           <div className="row">
             <div className="col">
-              <button className="btn" onClick={() => { this.props.handleShowSignup(true) }}>Sign up</button>
+              <button className="btn" onClick={() => { this.props.handleShowComponent('showSignup',true) }}>Sign up</button>
             </div>
             <div className="col">
-              <button className="btn">Forgot password?</button>
+              <button className="btn" onClick={() => { this.props.handleShowComponent('showFP',true) }}>Forgot password?</button>
             </div>
           </div>
         </div>

@@ -54,7 +54,7 @@ class Home extends Component {
       this.setState({
         list: list,
         doneTasks: doneTasks,
-        showLoader:false
+        showLoader: false
       });
     })
     listRef.on('child_changed', snapshot => {
@@ -170,7 +170,12 @@ class Home extends Component {
   render() {
     return (
       <div className="Home">
-        <div className='header'>{this.props.user.displayName.toUpperCase()}</div>
+        {
+          this.props.user.displayName
+            ?
+            <div className='header'>{this.props.user.displayName.toUpperCase()}</div>
+            : <div className='header'>{this.props.user.displayName.toUpperCase()}</div>
+        }
         <div className='list'>
           <div id="myDIV" className="header">
             <form onSubmit={this.handleSubmit}>
@@ -189,10 +194,10 @@ class Home extends Component {
                 width="50"
               />
             </div> :
-                 this.state.list.length===0
-                 ? <h2>No tasks</h2>
-                 :
-            <List list={this.state.list} deleteList={this.deleteList} statusToggle={this.statusToggle} />
+            this.state.list.length === 0
+              ? <h2>No tasks</h2>
+              :
+              <List list={this.state.list} deleteList={this.deleteList} statusToggle={this.statusToggle} />
           }
           <div className='donetasks'>Total done task:{this.state.doneTasks}/{this.state.list.length}</div>
         </div>

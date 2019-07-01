@@ -11,19 +11,12 @@ class Signup extends Component {
             password:null,
             error:null
         }
-        this.handleCancel = this.handleCancel.bind(this)
         this.handleSubmit = this.handleSubmit.bind(this)
         this.handleChange = this.handleChange.bind(this)
-    }
-    
-    handleCancel(e) {
-        e.preventDefault();
-        this.props.handleShowSignup(false)
     }
     handleSubmit = (event) => {
         event.preventDefault();
         const { email, password } = this.state;
-        console.log(email,password)
        fire.auth().createUserWithEmailAndPassword(email, password).then((user) => {
         console.log('Signup successfully',user)
         return user.user.updateProfile({
@@ -42,7 +35,6 @@ class Signup extends Component {
         this.setState({
             [e.target.name]:e.target.value
         })
-         console.log(this.state)
      }
     render() {
         return (
@@ -54,14 +46,14 @@ class Signup extends Component {
                         <p>Please fill in this form to create an account.</p>
                         <hr />
                         <input type="text" placeholder="Enter Name" name="name" required onChange={this.handleChange}/>
-                        <input type="text" placeholder="Enter Email" name="email" required onChange={this.handleChange}/>
+                        <input type="email" placeholder="Enter Email" name="email" required onChange={this.handleChange}/>
                         <input type="password" placeholder="Enter Password" name="password" required onChange={this.handleChange}/>
 
                         <input type="password" placeholder="Repeat Password" name="password-repeat" required onChange={this.handleChange}/>
 
                         <div className="clearfix">
                             <button type="submit" className="signupbtn" onClick={this.handleSubmit}>Submit</button>
-                            <button type="button" className="cancelbtn" onClick={()=>{this.props.handleShowSignup(false)}}>Cancel</button>
+                            <button type="button" className="cancelbtn" onClick={()=>{this.props.handleShowComponent('showSignup',false)}}>Cancel</button>
                         </div>
                     </div>
                 </form>

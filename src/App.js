@@ -3,6 +3,7 @@ import React, { Component } from 'react';
 import Home from './Home';
 import Login from './Login'
 import Signup from './Signup'
+import ForgetPassword from './ForgetPassword'
 import fire from './fire';
 import * as firebase from 'firebase/app';
 import Loader from 'react-loader-spinner'
@@ -16,9 +17,10 @@ class App extends Component {
     super(props)
     this.state = {
       showLoader: true,
-      showSignup: false
+      showSignup: false,
+      showFP:false
     }
-    this.handleShowSignup = this.handleShowSignup.bind(this)
+    this.handleShowComponent = this.handleShowComponent.bind(this)
     setTimeout(() => {
       this.setState({ showLoader: false })
     }, 3000);
@@ -33,14 +35,12 @@ class App extends Component {
       }
     })
   }
-  handleShowSignup(val) {
-    console.log(val, 'handleShowSignup')
-    this.setState({ showSignup: val })
+  handleShowComponent(cvar,val) {
+    this.setState({ [cvar]: val })
   }
   render() {
     console.log('render')
-    console.log(this.props)
-
+   
     const {
       user,
       signOut,
@@ -73,14 +73,17 @@ class App extends Component {
             } {
                 user
                   ? <Home user={user} />
-                  : !this.state.showSignup
+                  : !this.state.showSignup && !this.state.showFP
                     ?
                     <Login
                       signInWithFacebook={signInWithFacebook}
                       signInWithTwitter={signInWithTwitter}
                       signInWithGoogle={signInWithGoogle}
-                      handleShowSignup={this.handleShowSignup}
-                    /> : <Signup handleShowSignup={this.handleShowSignup} />
+                      handleShowComponent={this.handleShowComponent}
+                    /> : !this.state.showFP
+                    ?
+                    <Signup handleShowComponent={this.handleShowComponent} user={user}/>
+                    : <ForgetPassword handleShowComponent={this.handleShowComponent} user={user}/> 
               }
             </React.Fragment>
         }
