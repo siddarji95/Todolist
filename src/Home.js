@@ -8,6 +8,7 @@ import './App.css';
 class Home extends Component {
   constructor(props) {
     super(props)
+    this.list=[];
     this.state = {
       input: '',
       list: [],
@@ -42,20 +43,20 @@ class Home extends Component {
     });
 
     let listRef = fire.database().ref('users/' + userId + '/list').orderByKey().limitToLast(100);
-    console.log(listRef)
     listRef.on('child_added', snapshot => {
-      console.log(snapshot.val())
       /* Update React state when message is added at Firebase Database */
       let listvalue = { text: snapshot.val(), id: snapshot.key };
-      let list = [listvalue].concat(this.state.list)
-      const doneTasks = list.filter((item, i) => {
+      console.log(this.state.list, "outside")
+      this.list = [listvalue].concat(this.list);
+      const doneTasks = this.list.filter((item, i) => {
         return item.text.status === 'checked'
       }).length;
       this.setState({
-        list: list,
+        list: this.list,
         doneTasks: doneTasks,
         showLoader: false
-      });
+      }, () => { console.log(this.state.list, 'inside set state') });
+
     })
     listRef.on('child_changed', snapshot => {
       let index = -1;
@@ -160,12 +161,12 @@ class Home extends Component {
       return item.status === 'checked'
     }).length;
     console.log(list)
+    var userId = fire.auth().currentUser.uid;
+    fire.database().ref('users/' + userId + '/list/' + id).remove();
     this.setState({
       list: list,
       doneTasks: doneTasks
     });
-    var userId = fire.auth().currentUser.uid;
-    fire.database().ref('users/' + userId + '/list/' + id).remove();
   }
   render() {
     return (
