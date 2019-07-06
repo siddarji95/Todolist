@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import List from './List';
+import Filter from './Filter';
 import fire from './fire';
 import Loader from 'react-loader-spinner'
 import './App.css';
@@ -8,14 +9,17 @@ import './App.css';
 class Home extends Component {
   constructor(props) {
     super(props)
-    this.list=[];
+    this.listQueue = [];
     this.state = {
       input: '',
       list: [],
+      displayList: [],
       doneTasks: 0,
-      showLoader: true
+      showLoader: true,
+      filter: null
     }
     this.handleChange = this.handleChange.bind(this)
+    this.handleFilterChange = this.handleFilterChange.bind(this)
     this.handleSubmit = this.handleSubmit.bind(this)
     //this.handleClick = this.handleClick.bind(this)
     this.deleteList = this.deleteList.bind(this)
@@ -46,16 +50,11 @@ class Home extends Component {
     listRef.on('child_added', snapshot => {
       /* Update React state when message is added at Firebase Database */
       let listvalue = { text: snapshot.val(), id: snapshot.key };
-      console.log(this.state.list, "outside")
-      this.list = [listvalue].concat(this.list);
-      const doneTasks = this.list.filter((item, i) => {
-        return item.text.status === 'checked'
-      }).length;
-      this.setState({
-        list: this.list,
-        doneTasks: doneTasks,
-        showLoader: false
-      }, () => { console.log(this.state.list, 'inside set state') });
+      console.log(this.state.list, "outside", this.listQueue.length)
+      this.listQueue.push(listvalue);
+      if (this.listQueue.length === 1) {
+        this.handleChildAddedQueue()
+      }
 
     })
     listRef.on('child_changed', snapshot => {
@@ -107,14 +106,69 @@ class Home extends Component {
     })
     // console.log(this.state)
   }
-  statusToggle(index) {
+  handleChildAddedQueue() {
+    const len = this.listQueue.length;
+    console.log("handleChildAddedQueue", this.listQueue.length)
+    const list = [...this.state.list, ...this.listQueue];
+    const doneTasks = list.filter((item, i) => {
+      return item.text.status === 'checked'
+    }).length;
+    this.setState({
+      list,
+      displayList: list,
+      doneTasks: doneTasks,
+      showLoader: false
+    }, () => {
+      this.listQueue.splice(0, len);
+      if (this.listQueue.length > 0) {
+        this.handleChildAddedQueue();
+      }
 
-    console.log(this.state)
-    const list = this.state.list
-    if (list[index].text.status === '')
-      list[index].text.status = 'checked';
+    });
+  }
+  changeFilter() {
+    let list
+    switch (this.state.optionName) {
+      case 'done':
+        list = this.state.list.filter((item, i) => {
+          return item.text.status === 'checked'
+        })
+        break;
+      case 'remaining':
+        list = this.state.list.filter((item, i) => {
+          return item.text.status !== 'checked'
+        })
+        break;
+      default:
+        list = this.state.list
+    }
+    console.log(list)
+    this.setState({
+      displayList: list,
+    })
+  }
+  handleFilterChange(e) {
+    e.preventDefault();
+    const seletedOption = e.target.selectedOptions[0]
+    if (!seletedOption) {
+      return;
+    }
+    const optionName = seletedOption.getAttribute('name').toLowerCase();
+    this.setState({
+      optionName
+    }, () => { this.changeFilter(); })
+  }
+  statusToggle(e) {
+    const list = this.state.list;
+    let id = e.target.id;
+    let currentElement = list.find((item) => {
+      return item.id === id;
+    });
+    if (currentElement.text.status === '')
+      currentElement.text.status = 'checked';
     else
-      list[index].text.status = '';
+      currentElement.text.status = '';
+
     const doneTasks = list.filter((item, i) => {
       return item.text.status === 'checked'
     }).length;
@@ -122,9 +176,9 @@ class Home extends Component {
       list: list,
       doneTasks: doneTasks
     });
-    let id = list[index].id;
+    this.changeFilter()
     var userId = fire.auth().currentUser.uid;
-    fire.database().ref('users/' + userId + '/list/' + id).update({ status: list[index].text.status });
+    fire.database().ref('users/' + userId + '/list/' + id).update({ status: currentElement.text.status });
     // console.log(this.state)
 
   }
@@ -153,9 +207,13 @@ class Home extends Component {
   deleteList(e, index) {
     e.stopPropagation();
     console.log('deleteList')
-    let id = this.state.list[index].id;
+    let id = e.target.id;
+    console.log(id, this.state.list)
     const list = this.state.list.filter((item, i) => {
-      return i !== index
+      return item.id !== id
+    })
+    const displayList = this.state.displayList.filter((item, i) => {
+      return item.id !== id
     })
     const doneTasks = list.filter((item, i) => {
       return item.status === 'checked'
@@ -165,6 +223,7 @@ class Home extends Component {
     fire.database().ref('users/' + userId + '/list/' + id).remove();
     this.setState({
       list: list,
+      displayList: displayList,
       doneTasks: doneTasks
     });
   }
@@ -197,8 +256,10 @@ class Home extends Component {
             </div> :
             this.state.list.length === 0
               ? <h2>No tasks</h2>
-              :
-              <List list={this.state.list} deleteList={this.deleteList} statusToggle={this.statusToggle} />
+              : <React.Fragment>
+                <Filter list={this.state.list} handleFilterChange={this.handleFilterChange} />
+                <List displayList={this.state.displayList} deleteList={this.deleteList} statusToggle={this.statusToggle} />
+              </React.Fragment>
           }
           <div className='donetasks'>Total done task:{this.state.doneTasks}/{this.state.list.length}</div>
         </div>
