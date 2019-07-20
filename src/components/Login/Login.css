@@ -1,13 +1,6 @@
-body {
-    font-family: Arial, Helvetica, sans-serif;
-  }
-  
-  * {
-    box-sizing: border-box;
-  }
   
   /* style the container */
-  .container {
+  .Login .container {
     position: relative;
     border-radius: 5px;
     background-color: #f2f2f2;
@@ -15,8 +8,8 @@ body {
   } 
   
   /* style inputs and link buttons */
-  input,
-  .btn {
+  .Login input,
+  .Login .btn {
     width: 100%;
     padding: 12px;
     border: none;
@@ -29,40 +22,40 @@ body {
     text-decoration: none; /* remove underline from anchors */
   }
   
-  input:hover,
-  .btn:hover {
+  .Login input:hover,
+  .Login .btn:hover {
     opacity: 1;
   }
   
   /* add appropriate colors to fb, twitter and google buttons */
-  .fb {
+  .Login .fb {
     background-color: #3B5998;
     color: white;
   }
   
-  .twitter {
+  .Login .twitter {
     background-color: #55ACEE;
     color: white;
   }
   
-  .google {
+  .Login .google {
     background-color: #dd4b39;
     color: white;
   }
   
   /* style the submit button */
-  input[type=submit] {
+  .Login input[type=submit] {
     background-color: #4CAF50;
     color: white;
     cursor: pointer;
   }
   
-  input[type=submit]:hover {
+  .Login input[type=submit]:hover {
     background-color: #45a049;
   }
   
   /* Two-column layout */
-  .col {
+  .Login .col {
     float: left;
     width: 50%;
     margin: auto;
@@ -105,7 +98,7 @@ body {
   /* bottom container */
   .bottom-container {
     text-align: center;
-    background-color: #6bb6ee;
+    background-color: #3b5998;
     border-radius: 0px 0px 4px 4px;
   }
   

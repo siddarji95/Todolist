@@ -3,6 +3,10 @@ import List from './List';
 import Filter from './Filter';
 import fire from '../fire';
 import Loader from 'react-loader-spinner'
+import { confirmAlert } from 'react-confirm-alert'; // Import
+import 'react-confirm-alert/src/react-confirm-alert.css'; // Import css
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 //import Menu from './Menu';
 
 class Home extends Component {
@@ -14,14 +18,15 @@ class Home extends Component {
       list: [],
       displayList: [],
       doneTasks: 0,
+      dueDate:null,
       showLoader: true,
       filter: null
     }
     this.handleChange = this.handleChange.bind(this)
+    this.handleDateChange = this.handleDateChange.bind(this)
     this.handleFilterChange = this.handleFilterChange.bind(this)
     this.handleSubmit = this.handleSubmit.bind(this)
-    //this.handleClick = this.handleClick.bind(this)
-    this.deleteList = this.deleteList.bind(this)
+    this.handleDeleteList = this.handleDeleteList.bind(this)
     this.statusToggle = this.statusToggle.bind(this)
     setTimeout(() => {
       this.setState({ showLoader: false })
@@ -38,7 +43,6 @@ class Home extends Component {
     //  console.log(fire.database().ref('users/' + userId))
     fire.database().ref('users/' + userId).on('value', (snapshot) => {
       if (snapshot.val() === null) {
-        console.log('siddharth')
         fire.database().ref('users/' + userId).set({
           email: this.props.user.email
         });
@@ -49,53 +53,58 @@ class Home extends Component {
     listRef.on('child_added', snapshot => {
       /* Update React state when message is added at Firebase Database */
       let listvalue = { text: snapshot.val(), id: snapshot.key };
-      console.log(this.state.list, "outside", this.listQueue.length)
       this.listQueue.push(listvalue);
       if (this.listQueue.length === 1) {
         this.handleChildAddedQueue()
       }
 
     })
-    listRef.on('child_changed', snapshot => {
-      let index = -1;
-      this.state.list.forEach((item, i) => {
+    // listRef.on('child_changed', snapshot => {
+    //   let index = -1;
+    //   this.state.list.forEach((item, i) => {
 
-        if (item.id === Number(snapshot.key)) {
-          index = i
-        }
-      })
-      let listValue = { text: snapshot.val(), id: snapshot.key };
-      let list = this.state.list
-      list[index] = listValue
-      const doneTasks = list.filter((item, i) => {
-        return item.text.status === 'checked'
-      }).length;
-      this.setState({
-        list: list,
-        doneTasks: doneTasks
-      });
+    //     if (item.id === Number(snapshot.key)) {
+    //       index = i
+    //     }
+    //   })
+    //   let listValue = { text: snapshot.val(), id: snapshot.key };
+    //   let list = this.state.list
+    //   list[index] = listValue
+    //   const doneTasks = list.filter((item, i) => {
+    //     return item.text.status === 'checked'
+    //   }).length;
+    //   this.setState({
+    //     list: list,
+    //     doneTasks: doneTasks
+    //   });
 
-    })
-    listRef.on('child_removed', snapshot => {
-      let index = -1;
-      this.state.list.forEach((item, i) => {
+    // })
+    // listRef.on('child_removed', snapshot => {
+    //   let index = -1;
+    //   this.state.list.forEach((item, i) => {
 
-        if (item.id === Number(snapshot.key)) {
-          index = i
-        }
-      })
-      const list = this.state.list.filter((item, i) => {
-        return i !== index
-      })
-      const doneTasks = list.filter((item, i) => {
-        return item.text.status === 'checked'
-      }).length;
-      this.setState({
-        list: list,
-        doneTasks: doneTasks
-      });
-    })
+    //     if (item.id === Number(snapshot.key)) {
+    //       index = i
+    //     }
+    //   })
+    //   const list = this.state.list.filter((item, i) => {
+    //     return i !== index
+    //   })
+    //   const doneTasks = list.filter((item, i) => {
+    //     return item.text.status === 'checked'
+    //   }).length;
+    //   this.setState({
+    //     list: list,
+    //     doneTasks: doneTasks
+    //   });
+    // })
 
+  }
+  handleDateChange(date) {
+    // const dueDate = date.toLocaleDateString();
+    this.setState({
+      dueDate: date
+    },()=>{console.log(this.state)});
   }
   handleChange(e) {
     e.preventDefault();
@@ -107,11 +116,17 @@ class Home extends Component {
   }
   handleChildAddedQueue() {
     const len = this.listQueue.length;
-    console.log("handleChildAddedQueue", this.listQueue.length)
     const list = [...this.state.list, ...this.listQueue];
     const doneTasks = list.filter((item, i) => {
       return item.text.status === 'checked'
     }).length;
+    list.forEach((value, index) => {
+      let today = new Date(); 
+      let dueDate = new Date(value.text.dueDate)
+      let diffTime = (dueDate.getTime() - today.getTime());
+      let diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      value.text.diffDays = diffDays;
+    });
     this.setState({
       list,
       displayList: list,
@@ -133,6 +148,9 @@ class Home extends Component {
           return item.text.status === 'checked'
         })
         break;
+      case 'due':
+        list = [...this.state.list].sort(({text: {diffDays:diffDays1}}, {text: {diffDays:diffDays2}})=>{return diffDays1-diffDays2});
+        break;
       case 'remaining':
         list = this.state.list.filter((item, i) => {
           return item.text.status !== 'checked'
@@ -141,7 +159,6 @@ class Home extends Component {
       default:
         list = this.state.list
     }
-    console.log(list)
     this.setState({
       displayList: list,
     })
@@ -167,7 +184,6 @@ class Home extends Component {
       currentElement.text.status = 'checked';
     else
       currentElement.text.status = '';
-
     const doneTasks = list.filter((item, i) => {
       return item.text.status === 'checked'
     }).length;
@@ -189,24 +205,41 @@ class Home extends Component {
       this.currentInput = {};
       this.currentInput.name = this.state.input;
       this.currentInput.status = '';
-      var today = new Date();
-      var date = today.getDate() + '-' + (today.getMonth() + 1) + '-' + today.getFullYear();
-      var time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
-      var dateTime = date + ' ' + time;
-      this.currentInput.dateTime = dateTime;
-
+      // var today = new Date();
+      // var date = today.getDate() + '-' + (today.getMonth() + 1) + '-' + today.getFullYear();
+      // var time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
+      // var dateTime = date + ' ' + time;
+      var dueDate = (this.state.dueDate.getMonth() + 1)  + '/' + this.state.dueDate.getDate() + '/' + this.state.dueDate.getFullYear();
+      this.currentInput.dueDate = dueDate
       this.setState({
         list: [...this.state.list, this.currentInput],
-        input: ''
-      });
+        input: '',
+        dueDate: null
+      },()=>{console.log(this.state)});
       var userId = fire.auth().currentUser.uid;
       fire.database().ref('users/' + userId + '/list').push(this.currentInput);
     }
   }
-  deleteList(e, index) {
+  handleDeleteList(e) {
     e.stopPropagation();
-    console.log('deleteList')
     let id = e.target.id;
+    confirmAlert({
+      title: 'Are you sure?',
+      message: 'You want to delete this task?',
+      buttons: [
+        {
+          label: 'Yes',
+          onClick: () => this.deleteList(id)
+        },
+        {
+          label: 'No',
+          onClick: () => console.log('No')
+        }
+      ]
+    });
+  }
+  deleteList(id) {
+    console.log('deleteList')
     console.log(id, this.state.list)
     const list = this.state.list.filter((item, i) => {
       return item.id !== id
@@ -227,6 +260,7 @@ class Home extends Component {
     });
   }
   render() {
+    console.log(this.state)
     return (
       <div className="Home">
         {
@@ -239,7 +273,16 @@ class Home extends Component {
           <div id="myDIV" className="header">
             <form onSubmit={this.handleSubmit}>
               <h2 >To Do List</h2>
-              <input type="text" id="myInput" placeholder="Add task..." onChange={this.handleChange} value={this.state.input} />
+              <input type="text" className='addTaskInput' placeholder="Add task..." onChange={this.handleChange} value={this.state.input} required/>
+              <div className=''>
+               <DatePicker
+                  selected={this.state.dueDate}
+                  onChange={this.handleDateChange}
+                  className='addDueDateInput'
+                  placeholderText="Click to select a due date"
+                  required
+                />
+                </div>
               <input className="addBtn" type="submit" value="Add" />
             </form>
           </div>
@@ -257,7 +300,7 @@ class Home extends Component {
               ? <h2>No tasks</h2>
               : <React.Fragment>
                 <Filter list={this.state.list} handleFilterChange={this.handleFilterChange} />
-                <List displayList={this.state.displayList} deleteList={this.deleteList} statusToggle={this.statusToggle} />
+                <List displayList={this.state.displayList} handleDeleteList={this.handleDeleteList} statusToggle={this.statusToggle} />
               </React.Fragment>
           }
           <div className='donetasks'>Total done task:{this.state.doneTasks}/{this.state.list.length}</div>

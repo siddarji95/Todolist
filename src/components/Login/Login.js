@@ -53,13 +53,13 @@ class Login extends Component {
 
               <div className="col">
                 <button onClick={this.props.signInWithFacebook} className="fb btn">
-                  <FontAwesomeIcon icon={faFacebookSquare} /> Login with Facebook
+                  <FontAwesomeIcon icon={faFacebookSquare} /> Facebook
                    </button>
                 <button onClick={this.props.signInWithTwitter} className="twitter btn">
-                  <FontAwesomeIcon icon={faTwitterSquare} /> Login with Twitter
+                  <FontAwesomeIcon icon={faTwitterSquare} /> Twitter
                   </button>
                 <button onClick={this.props.signInWithGoogle} className="google btn">
-                  <FontAwesomeIcon icon={faGooglePlusSquare} /> Login with Google+
+                  <FontAwesomeIcon icon={faGooglePlusSquare} /> Google+
                   </button>
               </div>
 

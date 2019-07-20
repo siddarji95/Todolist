@@ -29,7 +29,7 @@ class ForgetPassword extends Component {
     }
     render() {
         return (
-            <div className="ForgetPassword">
+            <div className="ForgetPassword Signup">
                 <div className="container">
                     <div className="row">
                         <h2>Forget Password</h2>
