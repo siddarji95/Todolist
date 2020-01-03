@@ -97,7 +97,7 @@ ul li.checked::before {
 }
 .dateTime{
   float: right;
-  padding: 0 45px;
+  margin: 0 45px;
   font-weight: 100;
 }
 

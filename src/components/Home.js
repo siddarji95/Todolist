@@ -279,7 +279,7 @@ class Home extends Component {
                   selected={this.state.dueDate}
                   onChange={this.handleDateChange}
                   className='addDueDateInput'
-                  placeholderText="Click to select a due date"
+                  placeholderText="MM/DD/YYYY"
                   required
                 />
                 </div>

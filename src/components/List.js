@@ -26,9 +26,9 @@ class List extends React.Component{
                         dateTime = `${Math.abs(diffDays)} days before`;
                     }
                     return (
-                        <li key={index} className={value.text.status} id={value.id} onClick={(e)=>this.props.statusToggle(e)}>
+                        <li key={index} className={value.text.status} title='Click to mark as done' id={value.id} onClick={(e)=>this.props.statusToggle(e)}>
                         <div className={`listTitle ${value.text.status}`} id={value.id}>{value.text.name}</div>
-                        <span className='dateTime' id={value.id}>{dateTime} </span>
+                        <span className='dateTime' id={value.id} title={value.text.dueDate}>{dateTime} </span>
                         <span className='close' id={value.id} onClick={(e)=>this.props.handleDeleteList(e)}>
                         X
                           </span>
