@@ -1,5 +1,16 @@
-import React from 'react';
-import ReactDOM from 'react-dom';
-import App from './components/App/App';
+import React from 'react'
+import ReactDOM from 'react-dom'
+import { Provider } from 'react-redux'
+import App from './components/App/App'
+import store from "./store";
 
-ReactDOM.render(<App />, document.getElementById('root'));
+store.subscribe(() => {
+  console.log("Store updated!", store.getState());
+});
+
+ReactDOM.render(
+  <Provider store = {store}>
+      <App />
+  </Provider>,
+ document.getElementById('root')
+)

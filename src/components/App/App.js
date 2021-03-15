@@ -39,7 +39,7 @@ class App extends Component {
     this.setState({ [cvar]: val })
   }
   render() {
-    console.log('render')
+    // console.log('render')
    
     const {
       user,

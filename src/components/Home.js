@@ -1,11 +1,14 @@
 import React, { Component } from 'react';
-import List from './List';
+import { connect } from 'react-redux'
+// import List from './List';
 import Filter from './Filter';
+import { updateList, updateDisplayList, deleteList, setVisibilityFilter, statusToggleTodo } from '../actions'
+import AddTodo from '../containers/AddTodo.js'
+import List from '../containers/List';
 import fire from '../fire';
 import Loader from 'react-loader-spinner'
 import { confirmAlert } from 'react-confirm-alert'; // Import
 import 'react-confirm-alert/src/react-confirm-alert.css'; // Import css
-import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 //import Menu from './Menu';
 
@@ -18,14 +21,13 @@ class Home extends Component {
       list: [],
       displayList: [],
       doneTasks: 0,
-      dueDate:null,
+      dueDate: null,
       showLoader: true,
       filter: null
     }
     this.handleChange = this.handleChange.bind(this)
     this.handleDateChange = this.handleDateChange.bind(this)
     this.handleFilterChange = this.handleFilterChange.bind(this)
-    this.handleSubmit = this.handleSubmit.bind(this)
     this.handleDeleteList = this.handleDeleteList.bind(this)
     this.statusToggle = this.statusToggle.bind(this)
     setTimeout(() => {
@@ -104,7 +106,7 @@ class Home extends Component {
     // const dueDate = date.toLocaleDateString();
     this.setState({
       dueDate: date
-    },()=>{console.log(this.state)});
+    }, () => { console.log(this.state) });
   }
   handleChange(e) {
     e.preventDefault();
@@ -116,52 +118,55 @@ class Home extends Component {
   }
   handleChildAddedQueue() {
     const len = this.listQueue.length;
-    const list = [...this.state.list, ...this.listQueue];
+    // const list = [...this.state.list, ...this.listQueue];
+    const list = [...this.props.todos.list, ...this.listQueue];
+    console.log()
     const doneTasks = list.filter((item, i) => {
       return item.text.status === 'checked'
     }).length;
     list.forEach((value, index) => {
-      let today = new Date(); 
+      let today = new Date();
       let dueDate = new Date(value.text.dueDate)
       let diffTime = (dueDate.getTime() - today.getTime());
       let diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
       value.text.diffDays = diffDays;
     });
-    this.setState({
+    this.listQueue.splice(0, len);
+    if (this.listQueue.length > 0) {
+      this.handleChildAddedQueue();
+    }
+    this.props.dispatch(updateList({
       list,
       displayList: list,
       doneTasks: doneTasks,
       showLoader: false
-    }, () => {
-      this.listQueue.splice(0, len);
-      if (this.listQueue.length > 0) {
-        this.handleChildAddedQueue();
-      }
-
-    });
+    }))
   }
   changeFilter() {
     let list
-    switch (this.state.optionName) {
+    console.log(this.props.visibilityFilter)
+    switch (this.props.visibilityFilter) {
       case 'done':
-        list = this.state.list.filter((item, i) => {
+        list = this.props.todos.list.filter((item, i) => {
           return item.text.status === 'checked'
         })
         break;
       case 'due':
-        list = [...this.state.list].sort(({text: {diffDays:diffDays1}}, {text: {diffDays:diffDays2}})=>{return diffDays1-diffDays2});
+        list = [...this.props.todos.list].sort(({ text: { diffDays: diffDays1 } }, { text: { diffDays: diffDays2 } }) => { return diffDays1 - diffDays2 });
         break;
       case 'remaining':
-        list = this.state.list.filter((item, i) => {
+        list = this.props.todos.list.filter((item, i) => {
           return item.text.status !== 'checked'
         })
         break;
       default:
-        list = this.state.list
+        list = this.props.todos.list
     }
-    this.setState({
-      displayList: list,
-    })
+    // this.setState({
+    //   displayList: list,
+    // })
+    console.log(list)
+    this.props.dispatch(updateDisplayList(list));
   }
   handleFilterChange(e) {
     e.preventDefault();
@@ -170,55 +175,25 @@ class Home extends Component {
       return;
     }
     const optionName = seletedOption.getAttribute('name').toLowerCase();
-    this.setState({
-      optionName
-    }, () => { this.changeFilter(); })
-  }
-  statusToggle(e) {
-    const list = this.state.list;
-    let id = e.target.id;
-    let currentElement = list.find((item) => {
-      return item.id === id;
+    // this.setState({
+    //   optionName
+    // }, () => { this.changeFilter(); })
+    this.props.dispatch(setVisibilityFilter(optionName)).then(() => {
+      console.log(this.props.visibilityFilter)
+      this.changeFilter();
     });
-    if (currentElement.text.status === '')
-      currentElement.text.status = 'checked';
-    else
-      currentElement.text.status = '';
-    const doneTasks = list.filter((item, i) => {
-      return item.text.status === 'checked'
-    }).length;
-    this.setState({
-      list: list,
-      doneTasks: doneTasks
-    });
-    this.changeFilter()
-    var userId = fire.auth().currentUser.uid;
-    fire.database().ref('users/' + userId + '/list/' + id).update({ status: currentElement.text.status });
-    // console.log(this.state)
+    // console.log(this.props.visibilityFilter)
 
   }
-  handleSubmit(e) {
-    e.preventDefault()
-    //rooms.push({roomId:this.state.roomId+1,name:name,messages:messages});
-    if (this.state.input !== '') {
-      console.log('here')
-      this.currentInput = {};
-      this.currentInput.name = this.state.input;
-      this.currentInput.status = '';
-      // var today = new Date();
-      // var date = today.getDate() + '-' + (today.getMonth() + 1) + '-' + today.getFullYear();
-      // var time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
-      // var dateTime = date + ' ' + time;
-      var dueDate = (this.state.dueDate.getMonth() + 1)  + '/' + this.state.dueDate.getDate() + '/' + this.state.dueDate.getFullYear();
-      this.currentInput.dueDate = dueDate
-      this.setState({
-        list: [...this.state.list, this.currentInput],
-        input: '',
-        dueDate: null
-      },()=>{console.log(this.state)});
-      var userId = fire.auth().currentUser.uid;
-      fire.database().ref('users/' + userId + '/list').push(this.currentInput);
-    }
+  statusToggle(e) {
+    const id = e.target.id;
+    this.props.dispatch(statusToggleTodo(id)).then(() => {
+      const userId = fire.auth().currentUser.uid;
+      fire.database().ref('users/' + userId + '/list/' + id).update({ status: this.props.todos.currentTodoData.text.status });
+    });
+
+    // console.log(this.state)
+
   }
   handleDeleteList(e) {
     e.stopPropagation();
@@ -229,7 +204,7 @@ class Home extends Component {
       buttons: [
         {
           label: 'Yes',
-          onClick: () => this.deleteList(id)
+          onClick: () => this.props.dispatch(deleteList(id))
         },
         {
           label: 'No',
@@ -238,29 +213,9 @@ class Home extends Component {
       ]
     });
   }
-  deleteList(id) {
-    console.log('deleteList')
-    console.log(id, this.state.list)
-    const list = this.state.list.filter((item, i) => {
-      return item.id !== id
-    })
-    const displayList = this.state.displayList.filter((item, i) => {
-      return item.id !== id
-    })
-    const doneTasks = list.filter((item, i) => {
-      return item.status === 'checked'
-    }).length;
-    console.log(list)
-    var userId = fire.auth().currentUser.uid;
-    fire.database().ref('users/' + userId + '/list/' + id).remove();
-    this.setState({
-      list: list,
-      displayList: displayList,
-      doneTasks: doneTasks
-    });
-  }
+
   render() {
-    console.log(this.state)
+    // console.log(this.state)
     return (
       <div className="Home">
         {
@@ -269,24 +224,9 @@ class Home extends Component {
             <div className='header'>{this.props.user.displayName.toUpperCase()}</div>
             : <div className='header'>{this.props.user.displayName.toUpperCase()}</div>
         }
-        <div className='list'>
-          <div id="myDIV" className="header">
-            <form onSubmit={this.handleSubmit}>
-              <h2 >To Do List</h2>
-              <input type="text" className='addTaskInput' placeholder="Add task..." onChange={this.handleChange} value={this.state.input} required/>
-              <div className=''>
-               <DatePicker
-                  selected={this.state.dueDate}
-                  onChange={this.handleDateChange}
-                  className='addDueDateInput'
-                  placeholderText="MM/DD/YYYY"
-                  required
-                />
-                </div>
-              <input className="addBtn" type="submit" value="Add" />
-            </form>
-          </div>
-          {this.state.showLoader
+        <AddTodo />
+        <div className="listWrapper">
+          {this.props.todos.showLoader
             ?
             <div className='dataLoader'>
               <Loader
@@ -296,18 +236,33 @@ class Home extends Component {
                 width="50"
               />
             </div> :
-            this.state.list.length === 0
+            this.props.todos.list.length === 0
               ? <h2>No tasks</h2>
               : <React.Fragment>
-                <Filter list={this.state.list} handleFilterChange={this.handleFilterChange} />
-                <List displayList={this.state.displayList} handleDeleteList={this.handleDeleteList} statusToggle={this.statusToggle} />
+                <Filter list={this.props.todos.list} handleFilterChange={this.handleFilterChange} />
+                <List displayList={this.props.todos.displayList} handleDeleteList={this.handleDeleteList} statusToggle={this.statusToggle} />
               </React.Fragment>
           }
-          <div className='donetasks'>Total done task:{this.state.doneTasks}/{this.state.list.length}</div>
         </div>
+        <div className='donetasks'>Total done task:{this.props.todos.doneTasks}/{this.props.todos.list.length}</div>
       </div>
+
     );
   }
 }
 
-export default Home;
+const mapStateToProps = (state) => {
+  return {
+    todos: state.todos,
+    visibilityFilter: state.visibilityFilter
+  };
+};
+
+const mapDispatchToProps = (dispatch) => {
+  return {
+    dispatch,
+  };
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(Home);
+

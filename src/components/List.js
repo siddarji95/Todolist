@@ -1,6 +1,7 @@
 import React from 'react';
 class List extends React.Component{
     render () {
+        console.log('List')
         // let yesterday = new Date(new Date().getTime() - 24 * 60 * 60 * 1000);
         // let tomorrow = new Date(new Date().getTime() + 24 * 60 * 60 * 1000);
         // let today = new Date() 
