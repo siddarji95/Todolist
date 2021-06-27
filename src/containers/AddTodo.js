@@ -43,7 +43,6 @@ class AddTodo extends React.Component {
 const mapStateToProps = (state) => {
   return {
     todos: state.todos,
-    visibilityFilter: state.visibilityFilter
   };
 };
 

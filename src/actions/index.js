@@ -24,14 +24,14 @@ export const addDueDate = date => ({
 //   return Promise.resolve();
 // };
 
-export const updateList = state => ({
-  type: 'UPDATE_LIST',
+export const updateAppState = (state) => ({
+  type: 'UPDATE_APP_STATE',
   state
-})
+});
 
-export const updateDisplayList = (list) => ({
-  type: 'UPDATE_DISPLAY_LIST',
-  list
+export const updateTodoState = (state) => ({
+  type: 'UPDATE_TODO_STATE',
+  state
 });
 
 export const deleteList = (id) => ({

@@ -73,11 +73,16 @@ ul li.checked::before {
   height: 15px;
   width: 7px;
 }
-/* .App{
+
+#root{
+  height: 800px
+}
+
+.App{
   height: 100%;
   width: 100%;
   display: table;
-} */
+}
 
 .listWrapper{
   min-height: 320px;

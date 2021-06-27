@@ -1,5 +1,7 @@
 import React, { Component } from 'react';
 import './App.css';
+import { connect } from 'react-redux'
+import { updateAppState, updateTodoState } from '../../actions'
 import Home from '../Home';
 import Login from '../Login/Login';
 import Signup from '../Signup/Signup';
@@ -16,34 +18,45 @@ class App extends Component {
   constructor(props) {
     super(props)
     this.state = {
-      showLoader: true,
       showSignup: false,
       showFP:false
     }
     this.handleShowComponent = this.handleShowComponent.bind(this)
+    this.handleLogOut = this.handleLogOut.bind(this)
     setTimeout(() => {
-      this.setState({ showLoader: false })
+      this.props.dispatch(updateAppState({
+        showAppLoader: false,
+      }))
     }, 3000);
     firebase.auth().onAuthStateChanged(user => {
-      if (user.hasOwnProperty('user'))
-        console.log('onAuthStateChanged', user)
       if (user) {
-        this.setState({ showLoader: false })
-      }
-      else if (user.hasOwnProperty('user')) {
-        this.props.user = user.user
+        this.props.dispatch(updateAppState({
+          showAppLoader: false,
+        }))
       }
     })
   }
+
+  handleLogOut(){
+    this.props.signOut();
+    this.props.dispatch(updateTodoState({
+      list: [],
+      displayList: [],
+      doneTasks: 0,
+      showListLoader: true
+    }))
+  }
+
   handleShowComponent(cvar,val) {
+    console.log(cvar,val)
     this.setState({ [cvar]: val })
   }
+
   render() {
     // console.log('render')
    
     const {
       user,
-      signOut,
       signInWithFacebook,
       signInWithTwitter,
       signInWithGoogle,
@@ -52,7 +65,7 @@ class App extends Component {
     return (
       <div className="App">
         {
-          this.state.showLoader
+          this.props.app.showAppLoader
             ?
             <div className='loader'>
               <Loader
@@ -66,7 +79,7 @@ class App extends Component {
             <React.Fragment> {
               user
                 ?
-                <button type="button" className="btn btn-default btn-sm logout" onClick={signOut} >
+                <button type="button" className="btn btn-default btn-sm logout" onClick={this.handleLogOut} >
                   Log out
                    </button>
                 : <div id="myDIV" className="header"> <h2 style={{ margin: 0 }}>To Do List</h2> </div>
@@ -79,11 +92,10 @@ class App extends Component {
                       signInWithFacebook={signInWithFacebook}
                       signInWithTwitter={signInWithTwitter}
                       signInWithGoogle={signInWithGoogle}
-                      handleShowComponent={this.handleShowComponent}
                     /> : !this.state.showFP
                     ?
-                    <Signup handleShowComponent={this.handleShowComponent} user={user}/>
-                    : <ForgetPassword handleShowComponent={this.handleShowComponent} user={user}/> 
+                    <Signup user={user}/>
+                    : <ForgetPassword user={user}/> 
               }
             </React.Fragment>
         }
@@ -97,7 +109,20 @@ const providers = {
   twitterProvider: new firebase.auth.TwitterAuthProvider(),
   googleProvider: new firebase.auth.GoogleAuthProvider(),
 };
-export default withFirebaseAuth({
+
+const mapStateToProps = (state) => {
+  return {
+    app: state.app
+  };
+};
+
+const mapDispatchToProps = (dispatch) => {
+  return {
+    dispatch,
+  };
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(withFirebaseAuth({
   providers,
   firebaseAppAuth,
-})(App);
+})(App));

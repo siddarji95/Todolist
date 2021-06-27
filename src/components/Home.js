@@ -1,8 +1,7 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux'
-// import List from './List';
 import Filter from './Filter';
-import { updateList, updateDisplayList, deleteList, setVisibilityFilter, statusToggleTodo } from '../actions'
+import { updateTodoState, deleteList, setVisibilityFilter, statusToggleTodo } from '../actions'
 import AddTodo from '../containers/AddTodo.js'
 import List from '../containers/List';
 import fire from '../fire';
@@ -10,29 +9,13 @@ import Loader from 'react-loader-spinner'
 import { confirmAlert } from 'react-confirm-alert'; // Import
 import 'react-confirm-alert/src/react-confirm-alert.css'; // Import css
 import "react-datepicker/dist/react-datepicker.css";
-//import Menu from './Menu';
-
 class Home extends Component {
   constructor(props) {
     super(props)
     this.listQueue = [];
-    this.state = {
-      input: '',
-      list: [],
-      displayList: [],
-      doneTasks: 0,
-      dueDate: null,
-      showLoader: true,
-      filter: null
-    }
-    this.handleChange = this.handleChange.bind(this)
-    this.handleDateChange = this.handleDateChange.bind(this)
     this.handleFilterChange = this.handleFilterChange.bind(this)
     this.handleDeleteList = this.handleDeleteList.bind(this)
     this.statusToggle = this.statusToggle.bind(this)
-    setTimeout(() => {
-      this.setState({ showLoader: false })
-    }, 3000);
   }
   componentWillMount() {
     /* Create reference to messages in Firebase Database */
@@ -55,72 +38,17 @@ class Home extends Component {
     listRef.on('child_added', snapshot => {
       /* Update React state when message is added at Firebase Database */
       let listvalue = { text: snapshot.val(), id: snapshot.key };
+      console.log(listvalue)
       this.listQueue.push(listvalue);
-      if (this.listQueue.length === 1) {
+      if (this.listQueue.length > 0) {
         this.handleChildAddedQueue()
       }
-
     })
-    // listRef.on('child_changed', snapshot => {
-    //   let index = -1;
-    //   this.state.list.forEach((item, i) => {
-
-    //     if (item.id === Number(snapshot.key)) {
-    //       index = i
-    //     }
-    //   })
-    //   let listValue = { text: snapshot.val(), id: snapshot.key };
-    //   let list = this.state.list
-    //   list[index] = listValue
-    //   const doneTasks = list.filter((item, i) => {
-    //     return item.text.status === 'checked'
-    //   }).length;
-    //   this.setState({
-    //     list: list,
-    //     doneTasks: doneTasks
-    //   });
-
-    // })
-    // listRef.on('child_removed', snapshot => {
-    //   let index = -1;
-    //   this.state.list.forEach((item, i) => {
-
-    //     if (item.id === Number(snapshot.key)) {
-    //       index = i
-    //     }
-    //   })
-    //   const list = this.state.list.filter((item, i) => {
-    //     return i !== index
-    //   })
-    //   const doneTasks = list.filter((item, i) => {
-    //     return item.text.status === 'checked'
-    //   }).length;
-    //   this.setState({
-    //     list: list,
-    //     doneTasks: doneTasks
-    //   });
-    // })
-
-  }
-  handleDateChange(date) {
-    // const dueDate = date.toLocaleDateString();
-    this.setState({
-      dueDate: date
-    }, () => { console.log(this.state) });
-  }
-  handleChange(e) {
-    e.preventDefault();
-    this.setState({
-      list: this.state.list,
-      input: e.target.value
-    })
-    // console.log(this.state)
   }
   handleChildAddedQueue() {
-    const len = this.listQueue.length;
-    // const list = [...this.state.list, ...this.listQueue];
-    const list = [...this.props.todos.list, ...this.listQueue];
-    console.log()
+    const list = [...this.listQueue];
+    console.log('here',this.props.todos.list)
+    console.log(...this.listQueue)
     const doneTasks = list.filter((item, i) => {
       return item.text.status === 'checked'
     }).length;
@@ -131,15 +59,11 @@ class Home extends Component {
       let diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
       value.text.diffDays = diffDays;
     });
-    this.listQueue.splice(0, len);
-    if (this.listQueue.length > 0) {
-      this.handleChildAddedQueue();
-    }
-    this.props.dispatch(updateList({
+    this.props.dispatch(updateTodoState({
       list,
       displayList: list,
       doneTasks: doneTasks,
-      showLoader: false
+      showListLoader: false
     }))
   }
   changeFilter() {
@@ -162,11 +86,10 @@ class Home extends Component {
       default:
         list = this.props.todos.list
     }
-    // this.setState({
-    //   displayList: list,
-    // })
-    console.log(list)
-    this.props.dispatch(updateDisplayList(list));
+    console.log(list);
+    this.props.dispatch(updateTodoState({
+      displayList: list,
+    }))
   }
   handleFilterChange(e) {
     e.preventDefault();
@@ -175,14 +98,9 @@ class Home extends Component {
       return;
     }
     const optionName = seletedOption.getAttribute('name').toLowerCase();
-    // this.setState({
-    //   optionName
-    // }, () => { this.changeFilter(); })
     this.props.dispatch(setVisibilityFilter(optionName)).then(() => {
-      console.log(this.props.visibilityFilter)
       this.changeFilter();
     });
-    // console.log(this.props.visibilityFilter)
 
   }
   statusToggle(e) {
@@ -191,9 +109,6 @@ class Home extends Component {
       const userId = fire.auth().currentUser.uid;
       fire.database().ref('users/' + userId + '/list/' + id).update({ status: this.props.todos.currentTodoData.text.status });
     });
-
-    // console.log(this.state)
-
   }
   handleDeleteList(e) {
     e.stopPropagation();
@@ -215,7 +130,6 @@ class Home extends Component {
   }
 
   render() {
-    // console.log(this.state)
     return (
       <div className="Home">
         {
@@ -226,7 +140,7 @@ class Home extends Component {
         }
         <AddTodo />
         <div className="listWrapper">
-          {this.props.todos.showLoader
+          {this.props.todos.showListLoader
             ?
             <div className='dataLoader'>
               <Loader

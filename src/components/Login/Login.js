@@ -1,27 +1,31 @@
 import React, { Component } from 'react';
 import fire from '../../fire';
 import './Login.css';
+import { connect } from 'react-redux'
+import { updateAppState } from '../../actions'
 import { faFacebookSquare, faTwitterSquare, faGooglePlusSquare } from "@fortawesome/free-brands-svg-icons";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 class Login extends Component {
   constructor(props) {
     super(props);
-    this.state = {
-      showSignup: this.props.showSignup,
-      name: null,
-      email: null,
-      password: null,
-      error: null
-    }
+    this.email = null
+    this.password = null
     this.handleSubmit = this.handleSubmit.bind(this)
     this.handleChange = this.handleChange.bind(this)
   }
+
   handleChange(e) {
     e.preventDefault();
     this.setState({
         [e.target.name]:e.target.value
     })
- }
+    // this.props.dispatch(updateAppState(state))
+  }
+
+  handleShowComponent(state) {
+    this.props.dispatch(updateAppState(state))
+  }
+
   handleSubmit = (event) => {
     event.preventDefault();
     const { email, password } = this.state;
@@ -68,8 +72,8 @@ class Login extends Component {
                   <p>Or sign in manually:</p>
                 </div>
                 <form>
-                <input type="email" name="email" placeholder="Email" required onChange={this.handleChange}/>
-                <input type="password" name="password" placeholder="Password" required onChange={this.handleChange} />
+                <input type="email" name="email" placeholder="Email" required ref={node => this.email = node}/>
+                <input type="password" name="password" placeholder="Password" required ref={node => this.password = node} />
                 <input type="submit" value="Login" onClick={this.handleSubmit}/>
                 </form>
               </div>
@@ -79,10 +83,10 @@ class Login extends Component {
         <div className="bottom-container">
           <div className="row">
             <div className="col">
-              <button className="btn" onClick={() => { this.props.handleShowComponent('showSignup',true) }}>Sign up</button>
+              <button className="btn" onClick={()=>{this.handleShowComponent({ showSignup: true })}}>Sign up</button>
             </div>
             <div className="col">
-              <button className="btn" onClick={() => { this.props.handleShowComponent('showFP',true) }}>Forgot password?</button>
+              <button className="btn" onClick={()=>{this.handleShowComponent({ showFP: true })}}>Forgot password?</button>
             </div>
           </div>
         </div>
@@ -91,4 +95,16 @@ class Login extends Component {
   }
 }
 
-export default Login;
+const mapStateToProps = (state) => {
+  return {
+    todos: state.todos,
+  };
+};
+
+const mapDispatchToProps = (dispatch) => {
+  return {
+    dispatch,
+  };
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(Login);

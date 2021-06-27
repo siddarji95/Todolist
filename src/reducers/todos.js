@@ -6,7 +6,7 @@ const todos = (state = {
   currentTodoData: null,
   doneTasks: 0,
   dueDate:null,
-  showLoader: true,
+  showListLoader: true,
   filter: null,
 }, action) => {
   let userId,currentTodoData,dueDate,id,list,doneTasks,displayList;
@@ -26,22 +26,14 @@ const todos = (state = {
         dueDate: null,
       }
     case 'ADD_DUE_DATE':
-      return {
-        ...state,
-        dueDate: action.date,
-      }
-    case 'UPDATE_LIST': 
     return {
       ...state,
-      list: action.state.list,
-      displayList: action.state.list,
-      doneTasks: action.state.doneTasks,
-      showLoader: false,
+      dueDate: action.date,
     }
-    case 'UPDATE_DISPLAY_LIST': 
+    case 'UPDATE_TODO_STATE': 
     return {
       ...state,
-      displayList: action.list,
+      ...action.state,
     }
     case 'DELETE_LIST':
     userId = fire.auth().currentUser.uid;
