@@ -1,5 +1,7 @@
 import React, { Component } from 'react';
-import fire from '../fire';
+import { connect } from 'react-redux';
+import { getAuth, sendPasswordResetEmail } from '@firebase/auth';
+import { updateAppState } from '../actions'
 class ForgetPassword extends Component {
     constructor(props) {
         super(props);
@@ -12,13 +14,16 @@ class ForgetPassword extends Component {
     }
     handleForgetPassword() {
         const { email } = this.state;
-        fire.auth().sendPasswordResetEmail(email).then((user) =>  {
+        const auth = getAuth();
+        sendPasswordResetEmail(auth, email).then((user) =>  {
             alert('Reset password link is sent to your email')
-            this.props.handleShowComponent('showFP',false)
+            // this.props.handleShowComponent('showFP',false)
+            this.props.dispatch(updateAppState({ showFP: false }))
         }).catch((error) => {
             console.log('Error occurred', error)
             // alert(error.message)
-            this.setState({ error: error.message });
+            this.props.dispatch(updateAppState({ error: error.message }))
+            // this.setState({ error: error.message });
         });
     }
     handleChange(e) {
@@ -40,7 +45,7 @@ class ForgetPassword extends Component {
 
                 <div className="clearfix">
                             <button type="submit" className="signupbtn" onClick={this.handleForgetPassword}>Submit</button>
-                            <button type="button" className="cancelbtn" onClick={()=>{this.props.handleShowComponent('showFP',false)}}>Cancel</button>
+                            <button type="button" className="cancelbtn" onClick={()=>{this.props.handleShowComponent({ showFP: false})}}>Cancel</button>
                         </div>
 
             </div>
@@ -48,4 +53,16 @@ class ForgetPassword extends Component {
     }
 }
 
-export default ForgetPassword;
+const mapStateToProps = (state) => {
+    return {
+        app: state.app
+    };
+};
+
+const mapDispatchToProps = (dispatch) => {
+    return {
+        dispatch,
+    };
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(ForgetPassword);

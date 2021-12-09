@@ -6,11 +6,10 @@ import Home from '../Home';
 import Login from '../Login/Login';
 import Signup from '../Signup/Signup';
 import ForgetPassword from '../ForgetPassword';
-import fire from '../../fire';
-import * as firebase from 'firebase/app';
+import * as firebase from "firebase/app";
+import { getAuth, onAuthStateChanged, signOut, GoogleAuthProvider, TwitterAuthProvider, FacebookAuthProvider } from "firebase/auth";
 import Loader from 'react-loader-spinner';
-import 'firebase/auth';
-import withFirebaseAuth from 'react-with-firebase-auth';
+import config from '../../fire';
 //import Menu from './Menu';
 
 
@@ -23,44 +22,55 @@ class App extends Component {
     }
     this.handleShowComponent = this.handleShowComponent.bind(this)
     this.handleLogOut = this.handleLogOut.bind(this)
+    firebase.initializeApp(config);
     setTimeout(() => {
       this.props.dispatch(updateAppState({
         showAppLoader: false,
       }))
     }, 3000);
-    firebase.auth().onAuthStateChanged(user => {
+    const auth = getAuth();
+    onAuthStateChanged(auth, user => {
       if (user) {
         this.props.dispatch(updateAppState({
+          user,
           showAppLoader: false,
         }))
       }
     })
   }
 
-  handleLogOut(){
-    this.props.signOut();
-    this.props.dispatch(updateTodoState({
-      list: [],
-      displayList: [],
-      doneTasks: 0,
-      showListLoader: true
-    }))
+  handleShowComponent(state) {
+    this.props.dispatch(updateAppState(state))
   }
 
-  handleShowComponent(cvar,val) {
-    console.log(cvar,val)
-    this.setState({ [cvar]: val })
+  handleLogOut(){
+    // this.props.signOut();
+    const auth = getAuth();
+    signOut(auth).then(() => {
+      // Sign-out successful.
+      this.props.dispatch(updateAppState({
+        user: null,
+      }))
+      this.props.dispatch(updateTodoState({
+        list: [],
+        displayList: [],
+        doneTasks: 0,
+        showListLoader: true
+      }))
+    }).catch((error) => {
+      // An error happened.
+      throw new Error(error);
+    });
   }
 
   render() {
-    // console.log('render')
-   
-    const {
-      user,
-      signInWithFacebook,
-      signInWithTwitter,
-      signInWithGoogle,
-    } = this.props;
+    console.log('render',this.props)
+    const { user } = this.props.app;
+    const providers = {
+      facebookProvider: new FacebookAuthProvider(),
+      twitterProvider: new TwitterAuthProvider(),
+      googleProvider: new GoogleAuthProvider(),
+    };
 
     return (
       <div className="App">
@@ -86,16 +96,14 @@ class App extends Component {
             } {
                 user
                   ? <Home user={user} />
-                  : !this.state.showSignup && !this.state.showFP
+                  : !this.props.app.showSignup && !this.props.app.showFP
                     ?
                     <Login
-                      signInWithFacebook={signInWithFacebook}
-                      signInWithTwitter={signInWithTwitter}
-                      signInWithGoogle={signInWithGoogle}
-                    /> : !this.state.showFP
+                      handleShowComponent={this.handleShowComponent}
+                    /> : !this.props.app.showFP
                     ?
-                    <Signup user={user}/>
-                    : <ForgetPassword user={user}/> 
+                    <Signup user={user} handleShowComponent={this.handleShowComponent}/>
+                    : <ForgetPassword user={user} handleShowComponent={this.handleShowComponent}/> 
               }
             </React.Fragment>
         }
@@ -103,12 +111,6 @@ class App extends Component {
     );
   }
 }
-const firebaseAppAuth = fire.auth();
-const providers = {
-  facebookProvider: new firebase.auth.FacebookAuthProvider(),
-  twitterProvider: new firebase.auth.TwitterAuthProvider(),
-  googleProvider: new firebase.auth.GoogleAuthProvider(),
-};
 
 const mapStateToProps = (state) => {
   return {
@@ -122,7 +124,4 @@ const mapDispatchToProps = (dispatch) => {
   };
 };
 
-export default connect(mapStateToProps, mapDispatchToProps)(withFirebaseAuth({
-  providers,
-  firebaseAppAuth,
-})(App));
+export default connect(mapStateToProps, mapDispatchToProps)(App);

@@ -2,6 +2,7 @@ const app = (state = {
   showAppLoader: true,
   showSignup: false,
   showFP:false,
+  user: null,
   name: null,
   email: null,
   password: null,

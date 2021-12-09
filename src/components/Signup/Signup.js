@@ -1,6 +1,9 @@
 import React, { Component } from 'react';
+import { connect } from 'react-redux'
+import { updateAppState } from '../../actions'
+import { getAuth, updateProfile, createUserWithEmailAndPassword } from '@firebase/auth';
 import './Signup.css';
-import fire from '../../fire';
+
 class Signup extends Component {
     constructor(props) {
         super(props);
@@ -17,11 +20,19 @@ class Signup extends Component {
     handleSubmit = (event) => {
         event.preventDefault();
         const { email, password } = this.state;
-        fire.auth().createUserWithEmailAndPassword(email, password).then((user) => {
-            console.log('Signup successfully', user)
-            return user.user.updateProfile({
-                displayName: this.state.name
-            })
+        const auth = getAuth();
+        createUserWithEmailAndPassword(auth, email, password).then((userCredential) => {
+            console.log('Signup successfully', userCredential, this.state.name)
+            return updateProfile(auth.currentUser, {
+                displayName: this.state.name,
+            }).then(() => {
+                console.log('user profile updated', this.state.name)
+                this.props.dispatch(updateAppState({
+                    user: auth.currentUser,
+                }))
+            }).catch((error) => {
+                throw new Error(error)
+            });
         })
             .catch((error) => {
                 console.log('Error occurred', error)
@@ -35,7 +46,6 @@ class Signup extends Component {
             [e.target.name]: e.target.value
         })
     }
-
     render() {
         return (
             <div className='Signup'>
@@ -53,7 +63,7 @@ class Signup extends Component {
 
                         <div className="clearfix">
                             <button type="submit" className="signupbtn" onClick={this.handleSubmit}>Submit</button>
-                            <button type="button" className="cancelbtn" onClick={() => { this.props.handleShowComponent('showSignup', false) }}>Cancel</button>
+                            <button type="button" className="cancelbtn" onClick={() => { this.props.handleShowComponent({ showSignup: false }) }}>Cancel</button>
                         </div>
                     </div>
                 </form>
@@ -63,4 +73,16 @@ class Signup extends Component {
     }
 }
 
-export default Signup;
+const mapStateToProps = (state) => {
+    return {
+        app: state.app
+    };
+};
+
+const mapDispatchToProps = (dispatch) => {
+    return {
+        dispatch,
+    };
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(Signup);

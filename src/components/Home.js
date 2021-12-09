@@ -4,7 +4,8 @@ import Filter from './Filter';
 import { updateTodoState, deleteList, setVisibilityFilter, statusToggleTodo } from '../actions'
 import AddTodo from '../containers/AddTodo.js'
 import List from '../containers/List';
-import fire from '../fire';
+import { getAuth } from '@firebase/auth';
+import { getDatabase, ref, child, get, update, remove, onChildAdded } from "firebase/database";
 import Loader from 'react-loader-spinner'
 import { confirmAlert } from 'react-confirm-alert'; // Import
 import 'react-confirm-alert/src/react-confirm-alert.css'; // Import css
@@ -17,25 +18,34 @@ class Home extends Component {
     this.handleDeleteList = this.handleDeleteList.bind(this)
     this.statusToggle = this.statusToggle.bind(this)
   }
-  componentWillMount() {
+  componentDidMount() {
     /* Create reference to messages in Firebase Database */
     // if(this.props.email){
     //   fire.database().ref('email').push({email:this.props.email})
     // }
 
+    const auth = getAuth()
     //Get the current userID
-    var userId = fire.auth().currentUser.uid;
+    const userId = auth.currentUser.uid;
     //  console.log(fire.database().ref('users/' + userId))
-    fire.database().ref('users/' + userId).on('value', (snapshot) => {
-      if (snapshot.val() === null) {
-        fire.database().ref('users/' + userId).set({
-          email: this.props.user.email
-        });
+
+    const db = getDatabase();
+    const dbRef = ref(getDatabase());
+    get(child(dbRef, `users/${userId}`)).then((snapshot) => {
+      if (snapshot.exists()) {
+        console.log(snapshot.val());
+        update(ref(db, 'users/' + userId), {
+          email: this.props.user.email,
+        })
+      } else {
+        console.log("No data available");
       }
+    }).catch((error) => {
+      console.error(error);
     });
 
-    let listRef = fire.database().ref('users/' + userId + '/list').orderByKey().limitToLast(100);
-    listRef.on('child_added', snapshot => {
+    const listRef = ref(db, 'users/' + userId + '/list')
+    onChildAdded(listRef, (snapshot) => {
       /* Update React state when message is added at Firebase Database */
       let listvalue = { text: snapshot.val(), id: snapshot.key };
       console.log(listvalue)
@@ -43,11 +53,11 @@ class Home extends Component {
       if (this.listQueue.length > 0) {
         this.handleChildAddedQueue()
       }
-    })
+    });
   }
   handleChildAddedQueue() {
     const list = [...this.listQueue];
-    console.log('here',this.props.todos.list)
+    console.log('here', this.props.todos.list)
     console.log(...this.listQueue)
     const doneTasks = list.filter((item, i) => {
       return item.text.status === 'checked'
@@ -106,10 +116,14 @@ class Home extends Component {
   statusToggle(e) {
     const id = e.target.id;
     this.props.dispatch(statusToggleTodo(id)).then(() => {
-      const userId = fire.auth().currentUser.uid;
-      fire.database().ref('users/' + userId + '/list/' + id).update({ status: this.props.todos.currentTodoData.text.status });
+      const db = getDatabase();
+      const auth = getAuth();
+      const userId = auth.currentUser.uid;
+      const updateListRef = ref(db, 'users/' + userId + '/list/' + id)
+      update(updateListRef, { status: this.props.todos.currentTodoData.text.status });
     });
   }
+
   handleDeleteList(e) {
     e.stopPropagation();
     let id = e.target.id;
@@ -119,7 +133,14 @@ class Home extends Component {
       buttons: [
         {
           label: 'Yes',
-          onClick: () => this.props.dispatch(deleteList(id))
+          onClick: () => {
+            this.props.dispatch(deleteList(id));
+            const db = getDatabase();
+            const auth = getAuth();
+            const userId = auth.currentUser.uid;
+            const removeListRef = ref(db, 'users/' + userId + '/list/' + id)
+            remove(removeListRef);
+          }
         },
         {
           label: 'No',
@@ -130,13 +151,14 @@ class Home extends Component {
   }
 
   render() {
+    console.log(this.props.user.displayName)
     return (
       <div className="Home">
         {
           this.props.user.displayName
             ?
             <div className='header'>{this.props.user.displayName.toUpperCase()}</div>
-            : <div className='header'>{this.props.user.displayName.toUpperCase()}</div>
+            : <div className='header'>{this.props.user.displayName}</div>
         }
         <AddTodo />
         <div className="listWrapper">

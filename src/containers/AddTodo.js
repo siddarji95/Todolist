@@ -1,5 +1,6 @@
 import React from 'react'
-import fire from '../fire';
+import { getAuth } from '@firebase/auth';
+import { getDatabase, ref, update, push } from "firebase/database";
 import { connect } from 'react-redux'
 import { addTodo, addDueDate } from '../actions'
 import DatePicker from "react-datepicker";
@@ -16,8 +17,12 @@ class AddTodo extends React.Component {
               return
             }
             this.props.dispatch(addTodo(input.value)).then(() => {
-              const userId = fire.auth().currentUser.uid;
-              fire.database().ref('users/' + userId + '/list').push(this.props.todos.currentTodoData);
+              const auth = getAuth()
+              const userId = auth.currentUser.uid;
+              const db = getDatabase();
+              const listRef = ref(db, 'users/' + userId + '/list')
+              const newListRef = push(listRef);
+              update(newListRef, this.props.todos.currentTodoData);
             })
             input.value = '';
           }}>

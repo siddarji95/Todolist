@@ -1,4 +1,3 @@
-import fire from '../fire';
 const todos = (state = {
   input: '',
   list: [],
@@ -17,8 +16,6 @@ const todos = (state = {
       currentTodoData.status = '';
       dueDate = (state.dueDate.getMonth() + 1)  + '/' + state.dueDate.getDate() + '/' + state.dueDate.getFullYear();
       currentTodoData.dueDate = dueDate
-      // userId = fire.auth().currentUser.uid;
-      // fire.database().ref('users/' + userId + '/list').push(currentInput);
       return {
         ...state,
         currentTodoData,
@@ -36,7 +33,6 @@ const todos = (state = {
       ...action.state,
     }
     case 'DELETE_LIST':
-    userId = fire.auth().currentUser.uid;
     id = action.id;
     list = state.list.filter((item, i) => {
       return item.id !== action.id
@@ -47,7 +43,6 @@ const todos = (state = {
     doneTasks = list.filter((item, i) => {
       return item.status === 'checked'
     }).length;
-    fire.database().ref('users/' + userId + '/list/' + id).remove();
     return {
       ...state,
       list: list,
