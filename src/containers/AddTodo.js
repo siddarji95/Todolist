@@ -1,48 +1,54 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
+import { TextField, Stack, Box, Toolbar, Button } from '@mui/material';
 import { getAuth } from '@firebase/auth';
 import { getDatabase, ref, update, push } from "firebase/database";
 import { connect } from 'react-redux'
 import { addTodo, addDueDate } from '../actions'
 import DatePicker from "react-datepicker";
 
-class AddTodo extends React.Component {
-  render() {
-    let input;
-    return (
-      <div className="addTodo">
-        <div className="header">
-          <form onSubmit={e => {
-            e.preventDefault()
-            if (!input.value.trim()) {
-              return
-            }
-            this.props.dispatch(addTodo(input.value)).then(() => {
-              const auth = getAuth()
-              const userId = auth.currentUser.uid;
-              const db = getDatabase();
-              const listRef = ref(db, 'users/' + userId + '/list')
-              const newListRef = push(listRef);
-              update(newListRef, this.props.todos.currentTodoData);
-            })
-            input.value = '';
-          }}>
-            <h2 >To Do List</h2>
-            <input type="text" className='addTaskInput' placeholder="Add task..." ref={node => input = node} required />
-            <div className=''>
-              <DatePicker
-                selected={this.props.todos.dueDate}
-                onChange={this.props.addDueDate}
-                className='addDueDateInput'
-                placeholderText="MM/DD/YYYY"
-                required
-              />
-            </div>
-            <input className="addBtn" type="submit" value="Add" />
-          </form>
-        </div>
-      </div>
-    )
+const AddTodo = (props) => {
+  const [input, setInput] = useState("");
+  useEffect(() => {
+    if (props.todos.currentTodoData) {
+      const auth = getAuth()
+      const userId = auth.currentUser.uid;
+      const db = getDatabase();
+      const listRef = ref(db, 'users/' + userId + '/list')
+      const newListRef = push(listRef);
+      update(newListRef, props.todos.currentTodoData);
+    }
+  }, [props.todos.currentTodoData])
+  const handleChange = (e) => {
+    setInput(e.target.value);
   }
+  const handleSubmit = (e) => {
+    e.preventDefault()
+    if (!input.trim()) {
+      return
+    }
+    props.dispatch(addTodo(input));
+    setInput("");
+  }
+  return (
+    <Box sx={{ width: "50%" }}>
+      <Toolbar />
+      <form onSubmit={handleSubmit}>
+        <Stack spacing={2} margin={2}>
+          <TextField style={{ background: "white", borderRadius: "10px" }} label="Add task" variant="outlined" onChange={handleChange} value={input} required />
+          <div className=''>
+            <DatePicker
+              selected={props.todos.dueDate}
+              onChange={props.addDueDate}
+              className='addDueDateInput'
+              placeholderText="MM/DD/YYYY"
+              required
+            />
+          </div>
+          <Button sx={{ width: "110px" }} type="submit" variant="contained">Add</Button>
+        </Stack>
+      </form>
+    </Box>
+  )
 }
 
 const mapStateToProps = (state) => {

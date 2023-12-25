@@ -1,7 +1,7 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
 import { Provider } from 'react-redux'
-import App from './components/App/App'
+import Routes from './routes'
 import store from "./store";
 
 store.subscribe(() => {
@@ -9,8 +9,8 @@ store.subscribe(() => {
 });
 
 ReactDOM.render(
-  <Provider store = {store}>
-      <App />
+  <Provider store={store}>
+    <Routes />
   </Provider>,
- document.getElementById('root')
+  document.getElementById('root')
 )

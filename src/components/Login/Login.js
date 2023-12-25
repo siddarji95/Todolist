@@ -1,48 +1,50 @@
-import React, { Component } from 'react';
-import { getAuth, signInWithPopup, signInWithEmailAndPassword, GoogleAuthProvider, TwitterAuthProvider, FacebookAuthProvider } from "firebase/auth";
-import './Login.css';
-import { connect } from 'react-redux'
-import { faFacebookSquare, faTwitterSquare, faGooglePlusSquare } from "@fortawesome/free-brands-svg-icons";
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-class Login extends Component {
-  constructor(props) {
-    super(props);
-    this.email = null
-    this.password = null
-    this.handleSubmit = this.handleSubmit.bind(this)
-    this.handleChange = this.handleChange.bind(this)
-    this.signIn = this.signIn.bind(this)
-    console.log(this.email, this.password)
-    this.providers = {
-      facebookProvider: new FacebookAuthProvider(),
-      twitterProvider: new TwitterAuthProvider(),
-      googleProvider: new GoogleAuthProvider(),
-    };
-  }
+import * as React from 'react';
+import Avatar from '@mui/material/Avatar';
+import Button from '@mui/material/Button';
+import { Divider, Toolbar, Grid, Box, Paper, Typography, Link, Checkbox, FormControlLabel, TextField, CssBaseline, Icon } from '@mui/material';
+import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
+import { createTheme, ThemeProvider } from '@mui/material/styles';
+import { useHistory } from 'react-router-dom';
+import LoginImage from "./Login.jpg"
+import googleIcon from "./googleIcon.svg"
+import { getAuth, signInWithPopup, signInWithEmailAndPassword, GoogleAuthProvider } from "firebase/auth";
 
-  handleChange(e) {
-    e.preventDefault();
-    this.setState({
-      [e.target.name]: e.target.value
-    })
-    console.log(this.state)
-    // this.props.dispatch(updateAppState(state))
-  }
+function Copyright(props) {
+  return (
+    <Typography variant="body2" color="text.secondary" align="center" {...props}>
+      {'Copyright © '}
+      <Link color="inherit" href="">
+        Todolist
+      </Link>{' '}
+      {new Date().getFullYear()}
+      {'.'}
+    </Typography>
+  );
+}
 
-  signIn(provider) {
+// TODO remove, this demo shouldn't need to reset the theme.
+
+const defaultTheme = createTheme();
+
+export default function Login(props) {
+  const history = useHistory();
+  console.log(history)
+  const googleProvider = new GoogleAuthProvider();
+  const signInWithAuth = (provider) => {
     const auth = getAuth();
     signInWithPopup(auth, provider)
       .then((result) => {
         console.log('Login Successfully', result.user.displayName)
+        history.push("/home");
       }).catch((error) => {
         throw new Error(error)
       });
   }
-
-  handleSubmit = (event) => {
+  const handleSubmit = (event) => {
     event.preventDefault();
-    console.log(this.state)
-    const { email, password } = this.state;
+    const data = new FormData(event.currentTarget);
+    const email = data.get('email');
+    const password = data.get('password');
     const auth = getAuth();
     signInWithEmailAndPassword(auth, email, password)
       .then((userCredential) => {
@@ -52,7 +54,7 @@ class Login extends Component {
       })
       .catch((error) => {
         console.log('Error occurred', error)
-        this.setState({ error: error.message });
+        // this.setState({ error: error.message });
         if (error.code === 'auth/wrong-password') {
           alert('Wrong password');
         } else if (error.code === 'auth/user-not-found') {
@@ -61,73 +63,132 @@ class Login extends Component {
           alert(error.message);
         }
       });
-  }
+  };
 
-  render() {
-    const providers = {
-      facebookProvider: new FacebookAuthProvider(),
-      twitterProvider: new TwitterAuthProvider(),
-      googleProvider: new GoogleAuthProvider(),
-    };
-    return (
-      <div className='Login'>
-        <div className="container">
-          <div className="row">
-            <h2 >Login with Social Media or Manually</h2>
-            <div className="vl">
-              <span className="vl-innertext">or</span>
-            </div>
+  return (
+    <ThemeProvider theme={defaultTheme}>
+      <Toolbar />
+      <Grid container component="main" sx={{ height: '100vh' }}>
+        <CssBaseline />
+        <Grid
+          item
+          xs={false}
+          sm={4}
+          md={7}
+          sx={{
+            backgroundImage: `url(${LoginImage})`,
+            backgroundRepeat: 'no-repeat',
+            backgroundColor: (t) =>
+              t.palette.mode === 'light' ? t.palette.grey[50] : t.palette.grey[900],
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+          }}
+        />
+        <Grid item xs={12} sm={8} md={5} component={Paper} elevation={6} square>
+          <Box
+            sx={{
+              my: 8,
+              mx: 4,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+            }}
+          >
+            <Avatar sx={{ m: 1, bgcolor: 'secondary.main' }}>
+              <LockOutlinedIcon />
+            </Avatar>
+            <Typography component="h1" variant="h5">
+              Sign in
+            </Typography>
+            <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
+              <TextField
+                type='email'
+                margin="normal"
+                required
+                fullWidth
+                id="email"
+                label="Email Address"
+                name="email"
+                autoComplete="email"
+                autoFocus
+              />
+              <TextField
+                margin="normal"
+                required
+                fullWidth
+                name="password"
+                label="Password"
+                type="password"
+                id="password"
+                autoComplete="current-password"
+              />
+              <FormControlLabel
+                control={<Checkbox value="remember" color="primary" />}
+                label="Remember me"
+              />
+              <Button
+                type="submit"
+                fullWidth
+                variant="contained"
+                sx={{ mt: 3, mb: 2 }}
+              >
+                Sign In
+              </Button>
+            </Box>
+            <Grid container>
+              <Grid item xs>
+                <Link
+                  component="button"
+                  variant="body2"
+                  onClick={() => {
+                    history.push("/forgetPassword")
+                  }}>
+                  Forgot password?
+                </Link>
+              </Grid>
+              <Grid item>
+                <Link
+                  component="button"
+                  variant="body2"
+                  onClick={() => {
+                    history.push("/signup")
+                  }}>
+                  {"Don't have an account? Sign Up"}
+                </Link>
+              </Grid>
+            </Grid>
+            <Divider sx={{ mt: 2 }} flexItem>
+              OR
+            </Divider>
+            <Grid container sx={{
+              mt: 3, mb: 2,
+              justifyContent: "center",
+              alignItems: "center"
+            }}>
+              <Grid
+                item
+                onClick={()=>{
+                  signInWithAuth(googleProvider)
+                }}
+                sx={{
+                  display: "flex", border: "1px solid #dadce0", borderRadius: "20px",
+                  justifyContent: "center", alignItems: "center", cursor: "pointer",
+                  p: 0.8
+                }}
+              >
+                <Box sx={{ display: "flex", alignItems: "center" }}>
+                  <img src={googleIcon} alt='googleIcon' height={25} width={25} />
+                </Box>
+                <Typography sx={{ pr: 5.2, pl: 2, color: "#3c4043", fontWeight: "500" }}>
+                  Continue with Google
+                </Typography>
+              </Grid>
+            </Grid>
+            <Copyright sx={{ mt: 5 }} />
 
-            <div className="col">
-              <button onClick={() => { this.signIn(providers.facebookProvider) }} className="fb btn">
-                <FontAwesomeIcon icon={faFacebookSquare} /> Facebook
-              </button>
-              <button onClick={() => { this.signIn(providers.twitterProvider) }} className="twitter btn">
-                <FontAwesomeIcon icon={faTwitterSquare} /> Twitter
-              </button>
-              <button onClick={() => { this.signIn(providers.googleProvider) }} className="google btn">
-                <FontAwesomeIcon icon={faGooglePlusSquare} /> Google+
-              </button>
-            </div>
-
-            <div className="col">
-              <div className="hide-md-lg">
-                <p>Or sign in manually:</p>
-              </div>
-              <form>
-                <input type="email" name="email" placeholder="Email" required onChange={this.handleChange} />
-                <input type="password" name="password" placeholder="Password" required onChange={this.handleChange} />
-                <input type="submit" value="Login" onClick={this.handleSubmit} />
-              </form>
-            </div>
-          </div>
-        </div>
-
-        <div className="bottom-container">
-          <div className="row">
-            <div className="col">
-              <button className="btn" onClick={() => { this.props.handleShowComponent({ showSignup: true }) }}>Sign up</button>
-            </div>
-            <div className="col">
-              <button className="btn" onClick={() => { this.props.handleShowComponent({ showFP: true }) }}>Forgot password?</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+          </Box>
+        </Grid>
+      </Grid>
+    </ThemeProvider>
+  );
 }
-
-const mapStateToProps = (state) => {
-  return {
-    todos: state.todos,
-  };
-};
-
-const mapDispatchToProps = (dispatch) => {
-  return {
-    dispatch,
-  };
-};
-
-export default connect(mapStateToProps, mapDispatchToProps)(Login);

@@ -74,10 +74,6 @@ ul li.checked::before {
   width: 7px;
 }
 
-#root{
-  height: 800px
-}
-
 .App{
   height: 100%;
   width: 100%;
